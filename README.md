@@ -160,8 +160,9 @@ If you use this code, please cite the original gym-pybullet-drones framework:
 
 This project builds upon gym-pybullet-drones. Please refer to the original project's license.
 
-## Author
+## Authors
 
-**Bahaa Ibrahim** (bahaaibrahim117@gmail.com)
+**Eman Mohamed** (g202426580@kfupm.edu.sa)
+**Bahaa Ibrahim** (g202510630@kfupm.edu.sa)
 
 Multi-agent leader-follower implementation and training experiments.
