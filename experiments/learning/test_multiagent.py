@@ -30,6 +30,7 @@ from ray import tune
 from ray.tune import register_env
 from ray.rllib.agents import ppo
 from ray.rllib.agents.ppo import PPOTrainer, PPOTFPolicy
+from ray.rllib.agents.a3c.a2c import A2CTrainer, A2C_DEFAULT_CONFIG
 from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.utils.test_utils import check_learning_achieved
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
@@ -132,8 +133,9 @@ if __name__ == "__main__":
 
     #### Parameters to recreate the environment ################
     NUM_DRONES = int(ARGS.exp.split("-")[2])
+    ALGO = ARGS.exp.split("-")[3].lower()  # Extract algorithm from path
     OBS = ObservationType.KIN if ARGS.exp.split("-")[4] == 'kin' else ObservationType.RGB
-    
+
     # Parse ActionType instance from file name
     action_name = ARGS.exp.split("-")[5]
     ACT = [action for action in ActionType if action.value == action_name]
@@ -224,7 +226,13 @@ if __name__ == "__main__":
     action_space = temp_env.action_space[0]
 
     #### Set up the trainer's config ###########################
-    config = ppo.DEFAULT_CONFIG.copy() # For the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
+    if ALGO == 'ppo' or ALGO == 'cc':  # 'cc' is PPO with centralized critic
+        base_config = ppo.DEFAULT_CONFIG.copy()
+    elif ALGO == 'a2c':
+        base_config = A2C_DEFAULT_CONFIG.copy()
+    else:
+        raise ValueError(f"Unknown algorithm: {ALGO}")
+
     config = {
         "env": temp_env_name,
         "num_workers": 0, #0+ARGS.workers,
@@ -250,7 +258,13 @@ if __name__ == "__main__":
     }
 
     #### Restore agent #########################################
-    agent = ppo.PPOTrainer(config=config)
+    if ALGO == 'ppo' or ALGO == 'cc':  # 'cc' is PPO with centralized critic
+        agent = ppo.PPOTrainer(config=config)
+    elif ALGO == 'a2c':
+        agent = A2CTrainer(config=config)
+    else:
+        raise ValueError(f"Unknown algorithm: {ALGO}")
+
     with open(ARGS.exp+'/checkpoint.txt', 'r+') as f:
         checkpoint = f.read()
     agent.restore(checkpoint)
